@@ -44,12 +44,7 @@ try:
 except ImportError:
     gunicorn = None
 
-try:
-    from enum import Enum
-except:
-    # for python < 3.4
-    class Enum:
-        pass
+from enum import Enum
 
 
 # Third party modules
@@ -1096,11 +1091,14 @@ class Reloader:
                 click.secho("\x1b[A[X] loaded %s       " % app_name, fg="green")
                 Reloader.MODULES[app_name] = module
                 Reloader.ERRORS[app_name] = None
-            except:
+            except Exception as err:
                 tb = traceback.format_exc()
-                print(tb)
+                try:
+                    ErrorStorage().log(app_name, get_error_snapshot())
+                except:
+                    print(tb)
                 click.secho(
-                    "\x1b[A[FAILED] loading %s       \n%s\n" % (app_name, tb),
+                    "\x1b[A[FAILED] loading %s (%s)" % (app_name, err),
                     fg="red",
                 )
                 Reloader.ERRORS[app_name] = tb
