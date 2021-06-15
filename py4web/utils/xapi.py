@@ -870,4 +870,81 @@ class DefaultAPIContext(APIContext):
         return ret
 
 
+class SafeFixtures:
+    _data = SimpleNamespace(
+        _fixture_supplier = None,
+        _decorator_call = False
+    )
+
+    # need for isinstance-checking
+    # should be set by user
+    Fixture = None
+    HTTP = None
+
+    def __new__(cls):
+        ogetattr = object.__getattribute__
+        fs = None
+        _data = None
+        Fixture = cls.Fixture
+
+        def getattribute(self, k):
+            ret = ogetattr(self, k)
+            if isinstance(ret, Fixture):
+                if _data._decorator_call:
+                    return k
+                fs.get(k)
+            return ret
+        cls.__getattribute__ = getattribute
+
+        self = super().__new__(cls)
+        cls._init(self)
+        _data = self._data
+        fs = _data._fixture_supplier
+        return self
+
+    def _init(self):
+        fixtures = {}
+        cls = self.__class__
+        for k, v in cls.__dict__.items():
+            if isinstance(v, cls.Fixture):
+                fixtures[k] = v
+        self._data._fixture_supplier = FixturesSupplier(HTTPException=self.HTTP, **fixtures)
+
+    @classmethod
+    def _use(cls, *fixtures):
+        def inner(fun):
+            fs = cls._data._fixture_supplier
+
+            def wrapper(*args, **kw):
+                fs.on_request()
+                [fs.get(k) for k in fixtures]
+                return fun(*args, **kw)
+
+            return post_proc(
+                wrapper,
+                shapers= [lambda r: fs.emit('transform', r)],
+                on_success= [lambda *a, **kw: fs.emit('on_success', *a, **kw)],
+                on_error= {(lambda *a, **kw: fs.emit('on_error', *a, **kw)): None},
+            )
+        cls._data._decorator_call = False
+        return inner
+
+    @property
+    def use(self):
+        self._data._decorator_call = True
+        return self._use
+
+    def __call__(self, fun):
+        fs = self._data._fixture_supplier
+
+        def wrapper(*args, **kw):
+            fs.on_request()
+            return fun(*args, **kw)
+
+        return post_proc(
+            wrapper,
+            shapers= [lambda r: fs.emit('transform', r)],
+            on_success= [lambda *a, **kw: fs.emit('on_success', *a, **kw)],
+            on_error= {(lambda *a, **kw: fs.emit('on_error', *a, **kw)): None},
+        )
 
