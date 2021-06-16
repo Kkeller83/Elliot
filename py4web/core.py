@@ -625,7 +625,7 @@ class Session(Fixture):
 
         response.set_cookie(
             self.local.session_cookie_name,
-            cookie_data,
+            str(cookie_data),
             path="/",
             secure=self.local.secure,
             same_site=self.same_site,
