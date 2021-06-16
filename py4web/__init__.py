@@ -20,6 +20,7 @@ from .core import (
     Translator,  # from pluralize
     Session,
     Cache,
+    Current,
     Flash,
     user_in,  # additional fixtures
     URL,  # custom helper
@@ -28,4 +29,4 @@ from .core import (
 
 __author__ = "Massimo Di Pierro <massimo.dipierro@gmail.com>"
 __license__ = "BSDv3"
-__version__ = "1.20210522.2"
+__version__ = "1.20210602.1"

@@ -10,20 +10,21 @@ from py4web.utils.dbstore import DBStore
 
 class TestSession(unittest.TestCase):
     def setUp(self):
-        request.environ['wsgi.input'] = io.StringIO()
+        request.environ["wsgi.input"] = io.StringIO()
         request.cookies.clear()
         response._cookies = ""
-    
+
     def test_session(self):
         request.app_name = "myapp"
         session = Session(secret="a", expiration=10)
         session.on_request()
         session["key"] = "value"
-        session.on_success(200)
         cookie_name = session.local.session_cookie_name
+        session.on_success(200)
         a, b = str(response._cookies)[len("Set-Cookie: ") :].split(";")[0].split("=", 1)
         request.cookies[a] = b
-        session.local.data.clear()
+        session.finalize()
+        self.assertEqual(session.local, None)
 
         session = Session(secret="b", expiration=10)
         request.cookies[a] = b
@@ -42,12 +43,12 @@ class TestSession(unittest.TestCase):
         request.cookies.clear()
         session.on_request()
         session["key"] = "value"
-        session.on_success(200)
         cookie_name = session.local.session_cookie_name
-
+        session.on_success(200)
         a, b = str(response._cookies)[len("Set-Cookie: ") :].split(";")[0].split("=", 1)
         request.cookies[a] = b
-        session.local.data.clear()
+        session.finalize()
+        self.assertIsNone(session.local)
 
         session = Session(expiration=10, storage=DBStore(db))
         request.cookies[a] = b
@@ -70,8 +71,8 @@ class TestSession(unittest.TestCase):
             request.cookies.clear()
             session.on_request()
             session["key"] = "value"
-            session.on_success(200)
             cookie_name = session.local.session_cookie_name
+            session.on_success(200)
 
             a, b = (
                 str(response._cookies)[len("Set-Cookie: ") :]
@@ -79,7 +80,8 @@ class TestSession(unittest.TestCase):
                 .split("=", 1)
             )
             request.cookies[a] = b
-            session.local.data.clear()
+            session.finalize()
+            self.assertEqual(session.local, None)
 
             conn = memcache.Client(["127.0.0.1:11211"], debug=0)
             session = Session(expiration=10, storage=conn)
