@@ -5,6 +5,7 @@
 # Standard modules
 import asyncio
 import cgitb
+import subprocess
 import code
 import copy
 import datetime

@@ -419,61 +419,6 @@ class FormStyleFactory:
                 else:
                     widget = Widget()
 
-            elif field.type == "upload":
-                control = DIV()
-                if value and not error:
-                    download_div = DIV()
-
-                    download_div.append(
-                        LABEL(
-                            "Currently:  ",
-                        )
-                    )
-                    if getattr(field, "download_url", None):
-                        url = field.download_url(value)
-                    else:
-                        url = "#"
-                    download_div.append(A(" download ", _href=url))
-
-=======
-                control = field.widget(table, vars)
-            # else we pick the right widget
-            else:
-                if field.name in self.widgets:
-                    widget = self.widgets[field.name]
-                elif field.type == "text":
-                    widget = TextareaWidget()
-                elif field.type == "datetime":
-                    widget = DateTimeWidget()
-                elif field.type == "boolean":
-                    widget = CheckboxWidget()
-                elif field.type == "upload":
-                    widget = FileUploadWidget()
-                    url = getattr(field, "download_url", lambda value: "#")(value)
->>>>>>> 3ec94131721b7709c52a9eda63307264d6c05a9c
-                    # Set the download url.
-                    field_attributes["_download_url"] = url
-                    # Set the flag determining whether the file is an image.
-                    field_attributes["_is_image"] = (url != "#") and Form.is_image(
-                        value
-                    )
-                    # do we need the variables below?
-                    delete_field_attributes = dict()
-                    delete_field_attributes["_label"] = "Remove"
-                    delete_field_attributes["_value"] = "ON"
-                    delete_field_attributes["_type"] = "checkbox"
-                    delete_field_attributes["_name"] = "_delete_" + field.name
-                    json_controls["form_fields"] += [delete_field_attributes]
-                    json_controls["form_values"]["_delete_" + field.name] = None
-                elif get_options(field.requires) is not None:
-                    widget = SelectWidget()
-                elif field.type == "password":
-                    widget = PasswordWidget()
-                elif field.type.startswith("list:"):
-                    widget = ListWidget()
-                else:
-                    widget = Widget()
-
                 control = widget.make(field, value, error, title, placeholder)
 
             key = control.name.rstrip("/")
@@ -529,9 +474,6 @@ class FormStyleFactory:
                         _class=class_outer,
                     )
                 )
-                controls["wrapped_widgets"][field_name] = SPAN(
-                    control, _class=class_inner
-                )
             else:
                 controls.wrappers[field.name] = wrapped = DIV(
                     control,
@@ -546,10 +488,6 @@ class FormStyleFactory:
                         P(field.comment or "", _class=class_info),
                         _class=class_outer,
                     )
-                )
-                controls["wrapped_widgets"][field_name] = DIV(
-                    control,
-                    _class=self.class_inner_exceptions.get(control.name, class_inner),
                 )
 
         if vars.get("id"):
@@ -720,7 +658,7 @@ class Form(object):
         record=None,
         readonly=False,
         deletable=True,
-        noncreate=False,
+        noncreate=True,
         formstyle=FormStyleDefault,
         dbio=True,
         keep_values=False,
