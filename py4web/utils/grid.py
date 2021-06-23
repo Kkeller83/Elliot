@@ -437,9 +437,11 @@ class Grid:
         else:
             # the columns specify with fields are needed
             self.needed_fields = self.param.columns[:]
-            # except the primary key may be missing and must be fetched even if not displayed
-            if not any(col.name == table._id.name for col in self.needed_fields):
-                self.needed_fields.insert(0, table._id)
+
+        # except the primary key may be missing and must be fetched even if not displayed
+        if not any(col.name == table._id.name for col in self.needed_fields):
+            self.needed_fields.insert(0, table._id)
+
         self.referrer = None
 
         if not self.tablename:
@@ -911,10 +913,17 @@ class Grid:
                 row_id = row["id"]
                 self.use_tablename = False
 
+            key = "%s.%s" % (self.tablename, '__row')
+            if self.formatters.get(key):
+                extra_class = self.formatters.get(key)(row)['_class']
+                extra_style = self.formatters.get(key)(row)['_style']
+            else:
+                extra_class= ''
+                extra_style= ''
             tr = TR(
                 _role="row",
-                _class=self.param.grid_class_style.classes.get("grid-tr"),
-                _style=self.param.grid_class_style.styles.get("grid-tr"),
+                _class=join_classes(self.param.grid_class_style.classes.get("grid-tr"),extra_class),
+                _style=join_classes(self.param.grid_class_style.styles.get("grid-tr"), extra_style),
             )
             #  add all the fields to the row
             for index, column in enumerate(self.param.columns):
