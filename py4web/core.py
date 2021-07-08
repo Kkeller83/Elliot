@@ -265,9 +265,15 @@ def objectify(obj):
     elif isinstance(obj, (numbers.Rational, numbers.Real)):
         return float(obj)
     elif isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
-        return obj.isoformat()
+        return obj.isoformat(sep=" ")
     elif isinstance(obj, str):
         return obj
+    elif isinstance(obj, dict):
+        return obj
+    elif hasattr(obj, "as_list"):
+        return obj.as_list()
+    elif hasattr(obj, "as_dict"):
+        return obj.as_dict()
     elif hasattr(obj, "__iter__") or isinstance(obj, types.GeneratorType):
         return list(obj)
     elif hasattr(obj, "xml"):
@@ -965,7 +971,7 @@ def get_error_snapshot(depth=5):
         etype = etype.__name__
 
     data = {}
-    data["timestamp"] = datetime.datetime.utcnow().isoformat()
+    data["timestamp"] = datetime.datetime.utcnow().isoformat(sep=" ")
     data["python_version"] = sys.version
     platform_keys = [
         "machine",
