@@ -265,7 +265,7 @@ def objectify(obj):
     elif isinstance(obj, (numbers.Rational, numbers.Real)):
         return float(obj)
     elif isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
-        return obj.isoformat(sep=" ")
+        return obj.isoformat().replace("T", " ")
     elif isinstance(obj, str):
         return obj
     elif isinstance(obj, dict):
@@ -971,7 +971,7 @@ def get_error_snapshot(depth=5):
         etype = etype.__name__
 
     data = {}
-    data["timestamp"] = datetime.datetime.utcnow().isoformat(sep=" ")
+    data["timestamp"] = datetime.datetime.utcnow().isoformat().replace("T", " ")
     data["python_version"] = sys.version
     platform_keys = [
         "machine",
