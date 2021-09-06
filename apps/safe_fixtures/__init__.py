@@ -21,13 +21,6 @@ SafeFixtures.Fixture = Fixture
 SafeFixtures.HTTP = HTTP
 
 
-class SF(SafeFixtures):
-    session = Session(secret="some secret")
-    index_html = Template('index.html')
-    db = db
-    user_in = None
-
-
 class RequiresUser(Fixture):
 
     def __init__(self, session):
@@ -39,7 +32,12 @@ class RequiresUser(Fixture):
         if not user or not user.get('id'):
             raise HTTP(401)
 
-SF.user_in = RequiresUser(SF.session)
+
+class SF(SafeFixtures):
+    session = Session(secret="some secret")
+    index_html = Template('index.html')
+    db = db
+    user_in = RequiresUser(session)
 
 
 sf = SF()
